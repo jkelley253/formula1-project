@@ -1,0 +1,70 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Formula 1 serverless backend
+
+Parameters:
+  CorsAllowOrigin:
+    Type: String
+    Default: "*"
+    Description: Origin allowed to call the public drivers API
+
+Globals:
+  Function:
+    Runtime: python3.12
+    Architectures:
+      - arm64
+    MemorySize: 256
+    Timeout: 15
+    Tracing: Active
+    Environment:
+      Variables:
+        CORS_ALLOW_ORIGIN: !Ref CorsAllowOrigin
+  HttpApi:
+    CorsConfiguration:
+      AllowOrigins:
+        - !Ref CorsAllowOrigin
+      AllowMethods:
+        - GET
+      AllowHeaders:
+        - Content-Type
+
+Resources:
+  DriversApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: $default
+
+  GetDriversFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: handlers.drivers.lambda_handler
+      Description: Returns the current Formula 1 driver standings
+
+  DriversIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref DriversApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !GetAtt GetDriversFunction.Arn
+      PayloadFormatVersion: "2.0"
+
+  DriversRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref DriversApi
+      RouteKey: "GET /api/drivers"
+      Target: !Sub "integrations/${DriversIntegration}"
+
+  GetDriversInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref GetDriversFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${DriversApi}/*/GET/api/drivers"
+
+Outputs:
+  DriversApiUrl:
+    Description: Public driver standings endpoint
+    Value: !Sub "https://${DriversApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/api/drivers"
