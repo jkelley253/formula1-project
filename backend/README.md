@@ -1,9 +1,15 @@
 # Formula 1 serverless backend
 
-This directory is an AWS SAM application. API Gateway invokes a Python 3.12
-Lambda function for `GET /api/drivers`; the function reads the current driver
-standings from Jolpica and returns the same `{"drivers": [...]}` contract used by
-the former Django endpoint.
+This directory is a UV workspace containing independently deployable AWS SAM
+microservices and shared infrastructure packages.
+
+- [`services/drivers/`](services/drivers/): current driver standings API
+- [`packages/lambda-common/`](packages/lambda-common/): shared Lambda HTTP helpers
+
+See [`../microservice_refactor.md`](../microservice_refactor.md) for the full
+architecture and workflow, and
+[`services/drivers/README.md`](services/drivers/README.md) for service-specific
+commands and contracts.
 
 The deployed runtime has no third-party Python dependencies. That keeps cold
 starts and the Lambda bundle small and avoids packaging FastF1, Pandas, and
@@ -20,13 +26,14 @@ their native dependencies for a standings-only request.
 ## Test
 
 ```bash
-uv sync --dev
+uv sync --all-packages --dev
 uv run pytest
 ```
 
 ## Run locally
 
 ```bash
+cd services/drivers
 sam build
 sam local start-api
 curl http://127.0.0.1:3000/api/drivers
@@ -38,17 +45,18 @@ The first deployment prompts for the AWS region and saves it to
 `samconfig.toml`:
 
 ```bash
+cd services/drivers
 sam build
 sam deploy --guided
 ```
 
-For later deployments, run `sam deploy`. The stack output named
-`DriversApiUrl` contains the frontend API URL.
+For later deployments, run `sam deploy` from the service directory. Its
+`DriversApiUrl` stack output contains the frontend API endpoint.
 
 For production, restrict CORS to the frontend origin:
 
 ```bash
-sam deploy --parameter-overrides CorsAllowOrigin=https://formula1project.com
+sam deploy --parameter-overrides CorsAllowOrigin=http://formula1project.com
 ```
 
 ## Configuration
