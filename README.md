@@ -103,4 +103,3 @@ VITE_API_BASE_URL=http://127.0.0.1:3000 npm run dev
 
 Open `http://localhost:5173`. See [`backend/README.md`](backend/README.md) and
 [`frontend/README.md`](frontend/README.md) for component-specific details.
-...
