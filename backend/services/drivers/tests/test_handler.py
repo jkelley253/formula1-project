@@ -2,12 +2,12 @@ import json
 from datetime import date
 from unittest.mock import patch
 
-from features.drivers.schema import DriverSchema
-from handlers.drivers import lambda_handler
-from integrations.jolpica.client import StandingsServiceError
+from drivers_service.domain.models import Driver
+from drivers_service.handlers.api import lambda_handler
+from drivers_service.infrastructure.jolpica import StandingsServiceError
 
 
-DRIVER = DriverSchema(
+DRIVER = Driver(
     drivers_current_position=1,
     drivers_current_position_str="1",
     drivers_current_total_points=100.0,
@@ -27,12 +27,13 @@ DRIVER = DriverSchema(
 )
 
 
-@patch("handlers.drivers.get_current_drivers", return_value=[DRIVER])
-def test_handler_returns_the_existing_api_shape(get_drivers):
+@patch("drivers_service.handlers.api.get_current_drivers", return_value=[DRIVER])
+def test_handler_preserves_api_contract(get_drivers):
     response = lambda_handler({}, None)
 
     assert response["statusCode"] == 200
     assert response["headers"]["content-type"] == "application/json"
+    assert response["headers"]["cache-control"] == "public, max-age=300"
     assert json.loads(response["body"]) == {
         "drivers": [{**DRIVER.__dict__, "drivers_birthday": "2000-01-02"}]
     }
@@ -40,10 +41,10 @@ def test_handler_returns_the_existing_api_shape(get_drivers):
 
 
 @patch(
-    "handlers.drivers.get_current_drivers",
+    "drivers_service.handlers.api.get_current_drivers",
     side_effect=StandingsServiceError("upstream failed"),
 )
-def test_handler_returns_bad_gateway_when_standings_are_unavailable(get_drivers):
+def test_handler_returns_bad_gateway_when_upstream_is_unavailable(get_drivers):
     response = lambda_handler({}, None)
 
     assert response["statusCode"] == 502

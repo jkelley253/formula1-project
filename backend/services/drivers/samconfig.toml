@@ -5,12 +5,12 @@ cached = true
 parallel = true
 
 [default.deploy.parameters]
-stack_name = "formula1-backend"
+stack_name = "formula1-drivers-service"
 resolve_s3 = true
 capabilities = "CAPABILITY_IAM"
 confirm_changeset = true
-s3_prefix = "formula1-backend"
-parameter_overrides = "CorsAllowOrigin=\"*\""
+s3_prefix = "formula1-drivers-service"
+parameter_overrides = "CorsAllowOrigin=\"http://formula1project.com\""
 image_repositories = []
 
 [default.global.parameters]

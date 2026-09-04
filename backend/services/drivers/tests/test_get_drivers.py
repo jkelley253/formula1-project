@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from features.drivers.service import get_current_drivers
+from drivers_service.application.get_drivers import get_current_drivers
 
 
 STANDING = {
@@ -18,16 +18,21 @@ STANDING = {
         "dateOfBirth": "1999-12-31",
         "nationality": "Example",
     },
-    "Constructors": [{
-        "constructorId": "sample-team",
-        "url": "https://example.com/sample-team",
-        "name": "Sample Team",
-        "nationality": "Example",
-    }],
+    "Constructors": [
+        {
+            "constructorId": "sample-team",
+            "url": "https://example.com/sample-team",
+            "name": "Sample Team",
+            "nationality": "Example",
+        }
+    ],
 }
 
 
-@patch("features.drivers.service.get_current_driver_standings", return_value=[STANDING])
+@patch(
+    "drivers_service.application.get_drivers.get_current_driver_standings",
+    return_value=[STANDING],
+)
 def test_service_maps_upstream_standing(client):
     driver = get_current_drivers()[0]
 

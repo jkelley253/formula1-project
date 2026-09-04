@@ -1,5 +1,12 @@
 # AWS setup and deployment notes
 
+> **Historical deployment record:** This file describes the original
+> single-stack backend that remains live during the staged migration. The
+> repository now uses independently deployable services. See
+> [`microservice_refactor.md`](microservice_refactor.md) for the current
+> structure and commands. Do not use the legacy backend paths below for new
+> deployments.
+
 This document explains how the Formula 1 frontend and backend were prepared
 for AWS, how they were deployed, and which AWS settings were not created from
 this repository.

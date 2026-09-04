@@ -1,15 +1,20 @@
 # Formula 1 Project
 
-React frontend with an AWS Lambda backend for current Formula 1 driver
-standings.
+React frontend with independently deployable AWS Lambda microservices for
+Formula 1 data.
 
 - [`frontend/`](frontend/): Vite/React web application
-- [`backend/`](backend/): AWS SAM application using API Gateway and Lambda
+- [`backend/`](backend/): UV workspace containing AWS SAM microservices
+
+See [`microservice_refactor.md`](microservice_refactor.md) for the architecture,
+development workflow, deployment commands, and instructions for adding
+services. The current service is documented in
+[`backend/services/drivers/README.md`](backend/services/drivers/README.md).
 
 ## Architecture
 
 ```text
-Browser -> S3 frontend -> API Gateway -> Lambda -> Jolpica API
+Browser -> S3 frontend -> Drivers API Gateway -> Drivers Lambda -> Jolpica API
 ```
 
 Production API:
@@ -42,22 +47,23 @@ aws sts get-caller-identity
 
 ```bash
 cd backend
-uv sync --dev
+uv sync --all-packages --dev
 uv run pytest
+cd services/drivers
 sam validate --lint
 sam build
 sam deploy
 ```
 
-The checked-in `samconfig.toml` deploys the `formula1-backend` stack to
-`us-west-2`. For the first deployment in another account or region, use
+The service-local `samconfig.toml` deploys the `formula1-drivers-service` stack
+to `us-west-2`. For the first deployment in another account or region, use
 `sam deploy --guided`.
 
 Retrieve and test the deployed URL:
 
 ```bash
 aws cloudformation describe-stacks \
-  --stack-name formula1-backend \
+  --stack-name formula1-drivers-service \
   --query 'Stacks[0].Outputs[?OutputKey==`DriversApiUrl`].OutputValue' \
   --output text
 curl https://xg3iib3hq8.execute-api.us-west-2.amazonaws.com/api/drivers
@@ -89,7 +95,7 @@ Vite embeds the endpoint at build time, so rebuild and sync after changing it.
 Start the backend:
 
 ```bash
-cd backend
+cd backend/services/drivers
 sam build
 sam local start-api
 ```

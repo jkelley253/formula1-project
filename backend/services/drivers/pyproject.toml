@@ -1,0 +1,22 @@
+[project]
+name = "formula1-drivers-service"
+version = "0.1.0"
+description = "Formula 1 current driver standings microservice"
+requires-python = ">=3.12"
+dependencies = ["formula1-lambda-common"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/drivers_service"]
+
+[tool.uv.sources]
+formula1-lambda-common = { workspace = true }
+
+[dependency-groups]
+dev = ["pytest>=8.3"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

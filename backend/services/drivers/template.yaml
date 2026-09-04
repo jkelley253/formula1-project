@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
-Description: Formula 1 serverless backend
+Description: Formula 1 drivers microservice
 
 Parameters:
   CorsAllowOrigin:
@@ -36,33 +36,19 @@ Resources:
 
   GetDriversFunction:
     Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
     Properties:
-      CodeUri: src/
-      Handler: handlers.drivers.lambda_handler
+      CodeUri: ../..
+      Handler: drivers_service.handlers.api.lambda_handler
       Description: Returns the current Formula 1 driver standings
-
-  DriversIntegration:
-    Type: AWS::ApiGatewayV2::Integration
-    Properties:
-      ApiId: !Ref DriversApi
-      IntegrationType: AWS_PROXY
-      IntegrationUri: !GetAtt GetDriversFunction.Arn
-      PayloadFormatVersion: "2.0"
-
-  DriversRoute:
-    Type: AWS::ApiGatewayV2::Route
-    Properties:
-      ApiId: !Ref DriversApi
-      RouteKey: "GET /api/drivers"
-      Target: !Sub "integrations/${DriversIntegration}"
-
-  GetDriversInvokePermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Ref GetDriversFunction
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub "arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${DriversApi}/*/GET/api/drivers"
+      Events:
+        GetDrivers:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref DriversApi
+            Path: /api/drivers
+            Method: GET
 
 Outputs:
   DriversApiUrl:

@@ -23,7 +23,7 @@
  */
 async function getDrivers() {
     const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
-        ?? 'https://xg3iib3hq8.execute-api.us-west-2.amazonaws.com'
+        ?? 'https://8bp62sfmta.execute-api.us-west-2.amazonaws.com'
     const response = await fetch(`${apiBaseUrl}/api/drivers`)
 
     if (!response.ok) {
