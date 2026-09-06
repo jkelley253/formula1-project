@@ -1,0 +1,124 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Formula 1 driver statistics API (EC2 owns ingestion)
+
+Parameters:
+  CorsAllowOrigin:
+    Type: String
+    Default: "*"
+    Description: Origin allowed to call the public drivers API
+  StatsVpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: VPC containing the EC2 PostgreSQL instance
+  StatsApiSubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: Subnets in the database VPC; the reader needs no internet route
+  DatabaseSecurityGroupId:
+    Type: AWS::EC2::SecurityGroup::Id
+    Description: Existing EC2 security group to allow PostgreSQL access from the API
+  StatsDatabaseHost:
+    Type: String
+    MinLength: 1
+    Description: EC2 private address or private DNS name
+  StatsDatabasePort:
+    Type: Number
+    Default: 5432
+    MinValue: 1
+    MaxValue: 65535
+  StatsDatabaseName:
+    Type: String
+    Default: formula1
+  StatsDatabaseUser:
+    Type: String
+    Default: driver_stats_api
+  StatsDatabasePassword:
+    Type: String
+    NoEcho: true
+    MinLength: 1
+    Description: Read-only role password; supplied in memory by the deployment helper
+Globals:
+  Function:
+    Runtime: python3.12
+    Architectures:
+      - arm64
+    MemorySize: 256
+    Timeout: 20
+    Tracing: Active
+    Environment:
+      Variables:
+        CORS_ALLOW_ORIGIN: !Ref CorsAllowOrigin
+  HttpApi:
+    CorsConfiguration:
+      AllowOrigins:
+        - !Ref CorsAllowOrigin
+      AllowMethods:
+        - GET
+      AllowHeaders:
+        - Content-Type
+
+Resources:
+  StatsApiSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Stats API access to EC2 PostgreSQL only
+      VpcId: !Ref StatsVpcId
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: !Ref StatsDatabasePort
+          ToPort: !Ref StatsDatabasePort
+          DestinationSecurityGroupId: !Ref DatabaseSecurityGroupId
+
+  StatsDatabaseIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref DatabaseSecurityGroupId
+      IpProtocol: tcp
+      FromPort: !Ref StatsDatabasePort
+      ToPort: !Ref StatsDatabasePort
+      SourceSecurityGroupId: !Ref StatsApiSecurityGroup
+      Description: Read stored driver standings from the API Lambda
+
+  StatsApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: $default
+
+  GetDriverStatsFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      CodeUri: ../..
+      Handler: driver_stats_service.handlers.api.lambda_handler
+      Description: Returns stored season and career driver statistics
+      VpcConfig:
+        SubnetIds: !Ref StatsApiSubnetIds
+        SecurityGroupIds:
+          - !Ref StatsApiSecurityGroup
+      Environment:
+        Variables:
+          DRIVER_STATS_DB_HOST: !Ref StatsDatabaseHost
+          DRIVER_STATS_DB_PORT: !Ref StatsDatabasePort
+          DRIVER_STATS_DB_NAME: !Ref StatsDatabaseName
+          DRIVER_STATS_DB_USER: !Ref StatsDatabaseUser
+          DRIVER_STATS_DB_PASSWORD: !Ref StatsDatabasePassword
+      Policies:
+        - AWSLambdaVPCAccessExecutionRole
+      Events:
+        GetStats:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref StatsApi
+            Path: /api/driver-stats/{driver_id}
+            Method: GET
+
+  StatsLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${GetDriverStatsFunction}
+      RetentionInDays: 30
+Outputs:
+  DriverStatsApiBaseUrl:
+    Value: !Sub https://${StatsApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}
+  DriverStatsFunctionName:
+    Value: !Ref GetDriverStatsFunction

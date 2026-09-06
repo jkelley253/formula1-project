@@ -6,21 +6,25 @@ Formula 1 data.
 - [`frontend/`](frontend/): Vite/React web application
 - [`backend/`](backend/): UV workspace containing AWS SAM microservices
 
-See [`microservice_refactor.md`](microservice_refactor.md) for the architecture,
-development workflow, deployment commands, and instructions for adding
-services. The current service is documented in
-[`backend/services/drivers/README.md`](backend/services/drivers/README.md).
+Service documentation:
+
+- [Driver standings](backend/services/drivers/README.md)
+- [Driver season and career statistics](backend/services/driver_stats/README.md)
+- [Driver stats installation and operations](scripts/driver-stats/README.md)
+- [Driver stats feature plan](driver_stats_feature.md), separate from the service README
 
 ## Architecture
 
 ```text
-Browser -> S3 frontend -> Drivers API Gateway -> Drivers Lambda -> Jolpica API
+Browser -> S3 frontend -> Drivers API Gateway -> Drivers Lambda -> PostgreSQL on EC2
+                      -> Stats API Gateway   -> Stats Lambda   -> PostgreSQL on EC2
+EC2 scheduled jobs -> Jolpica API -> PostgreSQL standings and stats tables
 ```
 
 Production API:
 
 ```text
-https://xg3iib3hq8.execute-api.us-west-2.amazonaws.com/api/drivers
+https://8bp62sfmta.execute-api.us-west-2.amazonaws.com/api/drivers
 ```
 
 API Gateway HTTP API routes must not include a trailing slash. Use
@@ -66,7 +70,7 @@ aws cloudformation describe-stacks \
   --stack-name formula1-drivers-service \
   --query 'Stacks[0].Outputs[?OutputKey==`DriversApiUrl`].OutputValue' \
   --output text
-curl https://xg3iib3hq8.execute-api.us-west-2.amazonaws.com/api/drivers
+curl https://8bp62sfmta.execute-api.us-west-2.amazonaws.com/api/drivers
 ```
 
 ## Deploy the frontend
@@ -81,6 +85,10 @@ aws s3 sync dist/ s3://formula1project.com --delete
 
 `--delete` removes old hashed assets that no longer exist in `dist/`. Omit it
 if those files must be retained.
+
+Driver names open shareable profiles at `/#/drivers/{driver_id}`. The stats API
+is selected by `VITE_DRIVER_STATS_API_BASE_URL`; see the frontend README for
+its production setting. Run `npm test` to verify profile navigation and states.
 
 To build against another backend:
 

@@ -1,0 +1,11 @@
+[Unit]
+Description=Weekly driver stats refresh, Monday 00:15 Pacific
+
+[Timer]
+OnCalendar=Mon *-*-* 00:15:00 America/Los_Angeles
+Persistent=true
+AccuracySec=1min
+Unit=formula1-driver-stats.service
+
+[Install]
+WantedBy=timers.target
