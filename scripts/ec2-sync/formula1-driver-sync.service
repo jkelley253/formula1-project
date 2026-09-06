@@ -1,0 +1,18 @@
+[Unit]
+Description=Sync Formula 1 drivers from Jolpica to local PostgreSQL
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=600
+StartLimitBurst=3
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/docker run --rm --name formula1-driver-sync --network host --read-only --cap-drop ALL --security-opt no-new-privileges --memory 256m --cpus 0.5 --mount type=bind,source=/etc/formula1-driver-sync/database.json,target=/run/secrets/database.json,readonly formula1-driver-sync:local
+ExecStopPost=/bin/sh -c 'if /usr/bin/docker container inspect formula1-driver-sync >/dev/null 2>&1; then /usr/bin/docker stop --time 10 formula1-driver-sync; fi'
+TimeoutStartSec=120
+TimeoutStopSec=20
+Restart=on-failure
+RestartSec=30
+StandardOutput=journal
+StandardError=journal

@@ -1,0 +1,24 @@
+# Explicit allowlist: never send the repository-root SSH key to Docker.
+**
+!backend/
+!backend/pyproject.toml
+!backend/uv.lock
+!backend/README.md
+!backend/packages/
+!backend/packages/lambda-common/
+!backend/packages/lambda-common/pyproject.toml
+!backend/packages/lambda-common/src/
+!backend/packages/lambda-common/src/**
+!backend/services/
+!backend/services/drivers/
+!backend/services/drivers/pyproject.toml
+!backend/services/drivers/src/
+!backend/services/drivers/src/**
+!backend/services/drivers/sql/
+!backend/services/drivers/sql/001_create_drivers.sql
+!scripts/
+!scripts/ec2-sync/
+!scripts/ec2-sync/Dockerfile
+!scripts/ec2-sync/setup_database.py
+**/__pycache__/
+**/*.pyc

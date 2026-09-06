@@ -1,0 +1,12 @@
+[Unit]
+Description=Weekly Formula 1 driver sync at Monday 00:01 Pacific
+
+[Timer]
+OnCalendar=Mon *-*-* 00:01:00 America/Los_Angeles
+Persistent=true
+AccuracySec=1s
+RandomizedDelaySec=0
+Unit=formula1-driver-sync.service
+
+[Install]
+WantedBy=timers.target
