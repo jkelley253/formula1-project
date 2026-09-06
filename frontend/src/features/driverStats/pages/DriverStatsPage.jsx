@@ -81,7 +81,13 @@ export default function DriverStatsPage({ driverId }) {
 
     const incomplete = stats && Object.values(stats.completeness).some((coverage) => coverage.unavailable_metrics.length > 0)
     const stale = stats && receivedAt - Date.parse(stats.updated_at) > 8 * 24 * 60 * 60 * 1000
-    return <article className="driver-profile">
+    const photoDriver = [
+        'antonelli', 'russell', 'colapinto', 'gasly', 'alonso', 'stroll',
+        'bortoleto', 'hulkenberg', 'perez', 'bottas', 'bearman', 'ocon',
+        'leclerc', 'hamilton', 'norris', 'piastri', 'hadjar', 'max_verstappen',
+        'arvid_lindblad', 'lawson', 'albon', 'sainz', 'tsunoda',
+    ].includes(driverId) ? driverId : undefined
+    return <article className="driver-profile" data-driver-photo={photoDriver}>
         <a className="back-link" href="#/">← Driver standings</a>
         <header className="profile-header">
             <p className="eyebrow">Formula 1 · Driver profile</p>

@@ -1,4 +1,56 @@
 .driver-profile { padding: 48px; }
+body:has([data-driver-photo="antonelli"]) { --profile-background: url('/images/drivers/antonelli.jpg'); }
+body:has([data-driver-photo="russell"]) { --profile-background: url('/images/drivers/russell.jpg'); }
+body:has([data-driver-photo="colapinto"]) { --profile-background: url('/images/drivers/colapinto.jpg'); }
+body:has([data-driver-photo="gasly"]) { --profile-background: url('/images/drivers/gasly.jpg'); }
+body:has([data-driver-photo="alonso"]) { --profile-background: url('/images/drivers/alonso.jpg'); }
+body:has([data-driver-photo="stroll"]) { --profile-background: url('/images/drivers/stroll.jpg'); }
+body:has([data-driver-photo="bortoleto"]) { --profile-background: url('/images/drivers/bortoleto.jpg'); }
+body:has([data-driver-photo="hulkenberg"]) { --profile-background: url('/images/drivers/hulkenberg.jpg'); }
+body:has([data-driver-photo="perez"]) { --profile-background: url('/images/drivers/perez.jpg'); }
+body:has([data-driver-photo="bottas"]) { --profile-background: url('/images/drivers/bottas.jpg'); }
+body:has([data-driver-photo="bearman"]) { --profile-background: url('/images/drivers/bearman.jpg'); }
+body:has([data-driver-photo="ocon"]) { --profile-background: url('/images/drivers/ocon.jpg'); }
+body:has([data-driver-photo="leclerc"]) { --profile-background: url('/images/drivers/leclerc.jpg'); }
+body:has([data-driver-photo="hamilton"]) { --profile-background: url('/images/drivers/hamilton.jpg'); }
+body:has([data-driver-photo="norris"]) { --profile-background: url('/images/drivers/norris.jpg'); }
+body:has([data-driver-photo="piastri"]) { --profile-background: url('/images/drivers/piastri.webp'); }
+body:has([data-driver-photo="hadjar"]) { --profile-background: url('/images/drivers/hadjar.jpg'); }
+body:has([data-driver-photo="max_verstappen"]) { --profile-background: url('/images/drivers/max_verstappen.jpg'); }
+body:has([data-driver-photo="arvid_lindblad"]) { --profile-background: url('/images/drivers/arvid_lindblad.jpg'); }
+body:has([data-driver-photo="lawson"]) { --profile-background: url('/images/drivers/lawson.jpg'); }
+body:has([data-driver-photo="albon"]) { --profile-background: url('/images/drivers/albon.jpg'); }
+body:has([data-driver-photo="sainz"]) { --profile-background: url('/images/drivers/sainz.jpg'); }
+body:has([data-driver-photo="tsunoda"]) { --profile-background: url('/images/drivers/tsunoda.jpg'); }
+body:has([data-driver-photo]) {
+    background-color: #292b2d;
+    background-image: linear-gradient(rgb(0 0 0 / 40%), rgb(0 0 0 / 40%)), var(--profile-background);
+    background-position: center 30%;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+.driver-profile[data-driver-photo] {
+    --surface: rgb(255 255 255 / 78%);
+    --border: rgb(255 255 255 / 32%);
+    --text-muted: #505762;
+}
+[data-driver-photo] .profile-header,
+[data-driver-photo] .profile-header h1,
+[data-driver-photo] .stats-section h2,
+[data-driver-photo] .stats-format h3,
+[data-driver-photo] .stats-definitions h2 { color: #fff; }
+[data-driver-photo] .back-link,
+[data-driver-photo] .stats-updated { color: #e0e3e8; }
+[data-driver-photo] .stats-metrics { background: transparent; }
+[data-driver-photo] .stats-definitions {
+    padding: 24px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: rgb(0 0 0 / 45%);
+    color: #e0e3e8;
+}
+[data-driver-photo] .stats-definitions a { color: inherit; }
 .back-link { color: var(--text-muted); text-decoration: none; font-weight: 650; }
 .back-link:hover { color: var(--accent); }
 .profile-header { margin: 32px 0 40px; }
