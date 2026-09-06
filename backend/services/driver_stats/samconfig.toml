@@ -1,0 +1,7 @@
+version = 0.1
+[default.deploy.parameters]
+stack_name = "formula1-driver-stats-service"
+region = "us-west-2"
+resolve_s3 = true
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = true

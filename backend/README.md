@@ -4,6 +4,7 @@ This directory is a UV workspace containing independently deployable AWS SAM
 microservices and shared infrastructure packages.
 
 - [`services/drivers/`](services/drivers/): current driver standings API
+- [`services/driver_stats/`](services/driver_stats/): stored season and career statistics, with an EC2 sync job
 - [`packages/lambda-common/`](packages/lambda-common/): shared Lambda HTTP helpers
 
 See [`../microservice_refactor.md`](../microservice_refactor.md) for the full

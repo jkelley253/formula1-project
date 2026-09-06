@@ -5,6 +5,7 @@ requires-python = ">=3.12"
 [manifest]
 members = [
     "formula1-backend-workspace",
+    "formula1-driver-stats-service",
     "formula1-drivers-service",
     "formula1-lambda-common",
 ]
@@ -60,6 +61,21 @@ dev = [
 
 [package.metadata.requires-dev]
 dev = [{ name = "pytest", specifier = ">=8.3" }]
+
+[[package]]
+name = "formula1-driver-stats-service"
+version = "0.1.0"
+source = { editable = "services/driver_stats" }
+dependencies = [
+    { name = "formula1-lambda-common" },
+    { name = "psycopg", extra = ["binary"] },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "formula1-lambda-common", editable = "packages/lambda-common" },
+    { name = "psycopg", extras = ["binary"], specifier = ">=3.2,<4" },
+]
 
 [[package]]
 name = "formula1-drivers-service"

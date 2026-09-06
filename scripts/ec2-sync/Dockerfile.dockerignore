@@ -10,6 +10,8 @@
 !backend/packages/lambda-common/src/
 !backend/packages/lambda-common/src/**
 !backend/services/
+!backend/services/driver_stats/
+!backend/services/driver_stats/pyproject.toml
 !backend/services/drivers/
 !backend/services/drivers/pyproject.toml
 !backend/services/drivers/src/

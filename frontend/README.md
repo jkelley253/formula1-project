@@ -1,6 +1,19 @@
 # Formula 1 frontend
 
-Vite/React frontend for the Formula 1 driver standings table.
+Vite/React frontend for Formula 1 driver standings and individual season/career profiles.
+
+Click a driver name to open `/#/drivers/{driver_id}`. Driver identity and stats
+load independently from their respective APIs. `.env.production` supplies the
+public stats endpoint for ordinary production builds. Override
+`VITE_DRIVER_STATS_API_BASE_URL` to use another stack's `DriverStatsApiBaseUrl`.
+Profiles use
+hash routing, so direct links work with the existing S3 hosting.
+
+Run `npm test` for profile navigation, calculation-display, and error-state tests.
+
+For local profiles, supply both API bases or run the two services locally with
+CORS allowing the development origin. The production APIs restrict browser
+requests to the production website.
 
 ## Local development
 

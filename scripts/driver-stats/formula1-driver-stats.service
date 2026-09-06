@@ -1,0 +1,14 @@
+[Unit]
+Description=Refresh Formula 1 driver season and career stats
+After=docker.service network-online.target
+Requires=docker.service
+Wants=network-online.target
+StartLimitIntervalSec=10800
+StartLimitBurst=3
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/formula1-driver-stats refresh --resume
+TimeoutStartSec=3h
+Restart=on-failure
+RestartSec=60

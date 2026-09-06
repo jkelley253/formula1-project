@@ -66,6 +66,7 @@ COPYFILE_DISABLE=1 tar --exclude='__pycache__' --exclude='*.pyc' \
   backend/packages/lambda-common/src \
   backend/services/drivers/pyproject.toml \
   backend/services/drivers/src backend/services/drivers/sql \
+  backend/services/driver_stats/pyproject.toml \
   scripts/ec2-sync scripts/install-ec2-driver-sync.sh
 
 scp -i ./formula1-db-key.pem /tmp/formula1-driver-sync.tar.gz \

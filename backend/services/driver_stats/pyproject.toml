@@ -1,0 +1,19 @@
+[project]
+name = "formula1-driver-stats-service"
+version = "0.1.0"
+description = "Stored season and career Formula 1 driver statistics"
+requires-python = ">=3.12"
+dependencies = ["formula1-lambda-common", "psycopg[binary]>=3.2,<4"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/driver_stats_service"]
+
+[tool.uv.sources]
+formula1-lambda-common = { workspace = true }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

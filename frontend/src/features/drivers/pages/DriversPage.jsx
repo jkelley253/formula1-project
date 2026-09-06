@@ -49,7 +49,7 @@ function DriversPage() {
                                 <td className="position">{driver.drivers_current_position}</td>
                                 <td><div className="driver">
                                     <span className="driver__code">{driver.drivers_driver_code}</span>
-                                    <span><strong>{driver.drivers_first_name} {driver.drivers_last_name}</strong>
+                                    <span><a className="driver-link" href={`#/drivers/${driver.drivers_id}`}><strong>{driver.drivers_first_name} {driver.drivers_last_name}</strong></a>
                                     <small>#{driver.drivers_number} · {driver.drivers_nationality}</small></span>
                                 </div></td>
                                 <td>{driver.drivers_current_team_names.join(', ')}</td>
