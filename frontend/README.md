@@ -11,18 +11,24 @@ hash routing, so direct links work with the existing S3 hosting.
 
 Run `npm test` for profile navigation, calculation-display, and error-state tests.
 
-For local profiles, supply both API bases or run the two services locally with
-CORS allowing the development origin. The production APIs restrict browser
-requests to the production website.
+Local development uses Vite's proxy to read the deployed standings and stats
+APIs. This shows stored data without running a local backend or changing the
+deployed website. The production APIs restrict direct browser requests to the
+production website.
 
 ## Local development
 
 ```bash
 npm install
-VITE_API_BASE_URL=http://127.0.0.1:3000 npm run dev
+npm run dev
 ```
 
 Open `http://localhost:5173`.
+
+To use a separately configured local drivers backend instead, start Vite with
+`VITE_API_BASE_URL=http://127.0.0.1:3000 npm run dev`. The backend requires
+database credentials and network access to PostgreSQL; `sam local start-api`
+alone does not provide the database connection.
 
 ## Build and deploy
 
