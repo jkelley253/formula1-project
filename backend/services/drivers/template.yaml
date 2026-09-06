@@ -2,11 +2,77 @@ AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: Formula 1 drivers microservice
 
+Metadata:
+  cfn-lint:
+    config:
+      # Empty defaults are intentional for API-only deployments. The rule below
+      # requires real settings when sync is enabled; W1030 ignores that rule.
+      ignore_checks: [W1030]
+
 Parameters:
   CorsAllowOrigin:
     Type: String
     Default: "*"
     Description: Origin allowed to call the public drivers API
+  DriversVpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: VPC containing the EC2 PostgreSQL instance
+  DriversApiSubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: Subnets in the database VPC; the reader needs no internet route
+  DatabaseSecurityGroupId:
+    Type: AWS::EC2::SecurityGroup::Id
+    Description: Existing EC2 security group to allow PostgreSQL access from the API
+  DriversDatabaseHost:
+    Type: String
+    MinLength: 1
+    Description: EC2 private address or private DNS name
+  DriversDatabasePort:
+    Type: Number
+    Default: 5432
+    MinValue: 1
+    MaxValue: 65535
+  DriversDatabaseName:
+    Type: String
+    Default: formula1
+  DriversDatabaseUser:
+    Type: String
+    Default: drivers_api
+  DriversDatabasePassword:
+    Type: String
+    NoEcho: true
+    MinLength: 1
+    Description: Read-only role password; supplied in memory by the deployment helper
+  EnableDriverSync:
+    Type: String
+    Default: "false"
+    AllowedValues: ["true", "false"]
+  DriverSyncSubnetIds:
+    Type: CommaDelimitedList
+    Default: ""
+    Description: Private subnets with NAT egress in the EC2 database VPC
+  DriverSyncSecurityGroupIds:
+    Type: CommaDelimitedList
+    Default: ""
+    Description: Lambda security groups allowed to reach EC2 PostgreSQL
+  DatabaseSecretArn:
+    Type: String
+    Default: ""
+    Description: Secrets Manager ARN containing database connection settings
+
+Conditions:
+  DriverSyncEnabled: !Equals [!Ref EnableDriverSync, "true"]
+
+Rules:
+  RequireDriverSyncConfiguration:
+    RuleCondition: !Equals [!Ref EnableDriverSync, "true"]
+    Assertions:
+      - Assert: !Not [!Equals [!Ref DatabaseSecretArn, ""]]
+        AssertDescription: DatabaseSecretArn is required when driver sync is enabled
+      - Assert: !Not [!Contains [!Ref DriverSyncSubnetIds, ""]]
+        AssertDescription: Supply nonempty subnet IDs when driver sync is enabled
+      - Assert: !Not [!Contains [!Ref DriverSyncSecurityGroupIds, ""]]
+        AssertDescription: Supply nonempty security group IDs when driver sync is enabled
 
 Globals:
   Function:
@@ -29,6 +95,27 @@ Globals:
         - Content-Type
 
 Resources:
+  DriversApiSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Drivers API access to EC2 PostgreSQL only
+      VpcId: !Ref DriversVpcId
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: !Ref DriversDatabasePort
+          ToPort: !Ref DriversDatabasePort
+          DestinationSecurityGroupId: !Ref DatabaseSecurityGroupId
+
+  DriversDatabaseIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref DatabaseSecurityGroupId
+      IpProtocol: tcp
+      FromPort: !Ref DriversDatabasePort
+      ToPort: !Ref DriversDatabasePort
+      SourceSecurityGroupId: !Ref DriversApiSecurityGroup
+      Description: Read stored driver standings from the API Lambda
+
   DriversApi:
     Type: AWS::Serverless::HttpApi
     Properties:
@@ -41,7 +128,20 @@ Resources:
     Properties:
       CodeUri: ../..
       Handler: drivers_service.handlers.api.lambda_handler
-      Description: Returns the current Formula 1 driver standings
+      Description: Returns Formula 1 driver standings stored in PostgreSQL
+      VpcConfig:
+        SubnetIds: !Ref DriversApiSubnetIds
+        SecurityGroupIds:
+          - !Ref DriversApiSecurityGroup
+      Environment:
+        Variables:
+          DRIVERS_DB_HOST: !Ref DriversDatabaseHost
+          DRIVERS_DB_PORT: !Ref DriversDatabasePort
+          DRIVERS_DB_NAME: !Ref DriversDatabaseName
+          DRIVERS_DB_USER: !Ref DriversDatabaseUser
+          DRIVERS_DB_PASSWORD: !Ref DriversDatabasePassword
+      Policies:
+        - AWSLambdaVPCAccessExecutionRole
       Events:
         GetDrivers:
           Type: HttpApi
@@ -50,7 +150,49 @@ Resources:
             Path: /api/drivers
             Method: GET
 
+  SyncDriversFunction:
+    Type: AWS::Serverless::Function
+    Condition: DriverSyncEnabled
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      CodeUri: ../..
+      Handler: drivers_service.handlers.sync.lambda_handler
+      Description: Syncs current Formula 1 drivers to PostgreSQL every Monday
+      Timeout: 60
+      ReservedConcurrentExecutions: 1
+      VpcConfig:
+        SubnetIds: !Ref DriverSyncSubnetIds
+        SecurityGroupIds: !Ref DriverSyncSecurityGroupIds
+      Environment:
+        Variables:
+          DATABASE_SECRET_ARN: !Ref DatabaseSecretArn
+      Policies:
+        - AWSLambdaVPCAccessExecutionRole
+        - Statement:
+            - Effect: Allow
+              Action: secretsmanager:GetSecretValue
+              Resource: !Ref DatabaseSecretArn
+      EventInvokeConfig:
+        MaximumRetryAttempts: 2
+        MaximumEventAgeInSeconds: 3600
+      Events:
+        WeeklyDriverSync:
+          Type: ScheduleV2
+          Properties:
+            ScheduleExpression: "cron(1 0 ? * MON *)"
+            ScheduleExpressionTimezone: America/Los_Angeles
+            FlexibleTimeWindow:
+              Mode: "OFF"
+            RetryPolicy:
+              MaximumRetryAttempts: 2
+              MaximumEventAgeInSeconds: 3600
+
 Outputs:
+  SyncDriversFunctionName:
+    Condition: DriverSyncEnabled
+    Description: Scheduled driver sync Lambda name
+    Value: !Ref SyncDriversFunction
   DriversApiUrl:
     Description: Public driver standings endpoint
     Value: !Sub "https://${DriversApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/api/drivers"

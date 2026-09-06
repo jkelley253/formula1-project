@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from drivers_service.domain.models import Driver
 from drivers_service.handlers.api import lambda_handler
-from drivers_service.infrastructure.jolpica import StandingsServiceError
+from drivers_service.infrastructure.driver_reader import DriverReadError
 
 
 DRIVER = Driver(
@@ -27,7 +27,7 @@ DRIVER = Driver(
 )
 
 
-@patch("drivers_service.handlers.api.get_current_drivers", return_value=[DRIVER])
+@patch("drivers_service.handlers.api.get_stored_drivers", return_value=[DRIVER])
 def test_handler_preserves_api_contract(get_drivers):
     response = lambda_handler({}, None)
 
@@ -41,13 +41,14 @@ def test_handler_preserves_api_contract(get_drivers):
 
 
 @patch(
-    "drivers_service.handlers.api.get_current_drivers",
-    side_effect=StandingsServiceError("upstream failed"),
+    "drivers_service.handlers.api.get_stored_drivers",
+    side_effect=DriverReadError("database unavailable"),
 )
-def test_handler_returns_bad_gateway_when_upstream_is_unavailable(get_drivers):
+def test_handler_returns_bad_gateway_when_database_is_unavailable(get_drivers):
     response = lambda_handler({}, None)
 
     assert response["statusCode"] == 502
+    assert response["headers"]["cache-control"] == "no-store"
     assert json.loads(response["body"]) == {
         "error": "Driver standings are temporarily unavailable"
     }
